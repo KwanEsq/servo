@@ -388,7 +388,9 @@ impl WindowPortsMethods for Window {
             glutin::WindowEvent::ReceivedCharacter(ch) => self.handle_received_character(ch),
             glutin::WindowEvent::KeyboardInput { input, .. } => self.handle_keyboard_input(input),
             glutin::WindowEvent::MouseInput { state, button, .. } => {
-                if button == MouseButton::Left || button == MouseButton::Right {
+                if button == MouseButton::Left || button == MouseButton::Middle
+                    || button == MouseButton::Right
+                {
                     self.handle_mouse(button, state, self.mouse_pos.get());
                 }
             },
