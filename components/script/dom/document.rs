@@ -931,6 +931,7 @@ impl Document {
             MouseEventType::Click => "click".to_owned(),
             MouseEventType::MouseUp => "mouseup".to_owned(),
             MouseEventType::MouseDown => "mousedown".to_owned(),
+            MouseEventType::AuxClick => "auxclick".to_owned(),
         };
         debug!("{}: at {:?}", mouse_event_type_string, client_point);
 
@@ -996,6 +997,14 @@ impl Document {
                 event.fire(target);
             },
             MouseEventType::MouseUp => {
+                if let Some(a) = activatable {
+                    a.exit_formal_activation_state();
+                }
+
+                let target = node.upcast();
+                event.fire(target);
+            },
+            MouseEventType::AuxClick => {
                 if let Some(a) = activatable {
                     a.exit_formal_activation_state();
                 }

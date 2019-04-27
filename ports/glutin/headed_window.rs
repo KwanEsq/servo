@@ -253,7 +253,11 @@ impl Window {
                             self.event_queue
                                 .borrow_mut()
                                 .push(WindowEvent::MouseWindowEventClass(mouse_up_event));
-                            MouseWindowEvent::Click(MouseButton::Left, coords.to_f32())
+                            if sbutton as i16 == MouseButton::Left as i16 {
+                                MouseWindowEvent::Click(sbutton, coords.to_f32())
+                            } else {
+                                MouseWindowEvent::AuxClick(sbutton, coords.to_f32())
+                            }
                         } else {
                             mouse_up_event
                         }

@@ -460,6 +460,8 @@ pub enum MouseEventType {
     MouseDown,
     /// Mouse button up
     MouseUp,
+    /// Non-primary mouse button clicked
+    AuxClick,
 }
 
 /// Events from the compositor that the script thread needs to know about

@@ -630,6 +630,7 @@ impl<Window: WindowMethods + ?Sized> IOCompositor<Window> {
                 MouseWindowEvent::Click(_, _) => {},
                 MouseWindowEvent::MouseDown(_, p) => self.on_touch_down(TouchId(0), p),
                 MouseWindowEvent::MouseUp(_, p) => self.on_touch_up(TouchId(0), p),
+                MouseWindowEvent::AuxClick(_, _) => {},
             }
             return;
         }
@@ -642,6 +643,7 @@ impl<Window: WindowMethods + ?Sized> IOCompositor<Window> {
             MouseWindowEvent::Click(_, p) => p,
             MouseWindowEvent::MouseDown(_, p) => p,
             MouseWindowEvent::MouseUp(_, p) => p,
+            MouseWindowEvent::AuxClick(_, p) => p,
         };
 
         let results = self.hit_test_at_point(point);
@@ -654,6 +656,7 @@ impl<Window: WindowMethods + ?Sized> IOCompositor<Window> {
             MouseWindowEvent::Click(button, _) => (button, MouseEventType::Click),
             MouseWindowEvent::MouseDown(button, _) => (button, MouseEventType::MouseDown),
             MouseWindowEvent::MouseUp(button, _) => (button, MouseEventType::MouseUp),
+            MouseWindowEvent::AuxClick(button, _) => (button, MouseEventType::AuxClick),
         };
 
         let event_to_send = MouseButtonEvent(

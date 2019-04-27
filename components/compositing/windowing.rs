@@ -30,6 +30,7 @@ pub enum MouseWindowEvent {
     Click(MouseButton, DevicePoint),
     MouseDown(MouseButton, DevicePoint),
     MouseUp(MouseButton, DevicePoint),
+    AuxClick(MouseButton, DevicePoint),
 }
 
 /// Various debug and profiling flags that WebRender supports.
