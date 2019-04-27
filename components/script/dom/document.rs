@@ -921,7 +921,7 @@ impl Document {
     pub fn handle_mouse_event(
         &self,
         js_runtime: *mut JSRuntime,
-        _button: MouseButton,
+        button: MouseButton,
         client_point: Point2D<f32>,
         mouse_event_type: MouseEventType,
         node_address: Option<UntrustedNodeAddress>,
@@ -975,7 +975,7 @@ impl Document {
             false,
             false,
             false,
-            0i16,
+            button as i16,
             None,
             point_in_node,
         );
