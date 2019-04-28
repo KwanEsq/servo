@@ -331,7 +331,7 @@ pub struct Document {
     target_element: MutNullableDom<Element>,
     /// <https://w3c.github.io/uievents/#event-type-dblclick>
     #[ignore_malloc_size_of = "Defined in std"]
-    last_click_info: DomRefCell<Option<(Instant, Point2D<f32>)>>,
+    last_click_info: DomRefCell<Option<(Instant, Point2D<f32>, i32, i16)>>,
     /// <https://html.spec.whatwg.org/multipage/#ignore-destructive-writes-counter>
     ignore_destructive_writes_counter: Cell<u32>,
     /// <https://html.spec.whatwg.org/multipage/#ignore-opens-during-unload-counter>
@@ -960,7 +960,8 @@ impl Document {
         // https://w3c.github.io/uievents/#event-type-click
         let client_x = client_point.x as i32;
         let client_y = client_point.y as i32;
-        let click_count = 1;
+        let click_count = self.maybe_update_click_count(&mouse_event_type, button, client_point);
+
         let event = MouseEvent::new(
             &self.window,
             DOMString::from(mouse_event_type_string),
@@ -1016,65 +1017,78 @@ impl Document {
 
         if let MouseEventType::Click = mouse_event_type {
             self.commit_focus_transaction(FocusType::Element);
-            self.maybe_fire_dblclick(client_point, node);
+            if click_count > 1 && click_count % 2 == 0 {
+                self.fire_dblclick(client_point, node, click_count);
+            }
         }
 
         self.window
             .reflow(ReflowGoal::Full, ReflowReason::MouseEvent);
     }
 
-    fn maybe_fire_dblclick(&self, click_pos: Point2D<f32>, target: &Node) {
-        // https://w3c.github.io/uievents/#event-type-dblclick
+    fn maybe_update_click_count(
+        &self, event_type: &MouseEventType, button: MouseButton, click_pos: Point2D<f32>
+    ) -> i32 {
         let now = Instant::now();
 
         let opt = self.last_click_info.borrow_mut().take();
+        let mut count = 1;
 
-        if let Some((last_time, last_pos)) = opt {
-            let DBL_CLICK_TIMEOUT =
-                Duration::from_millis(pref!(dom.document.dblclick_timeout) as u64);
-            let DBL_CLICK_DIST_THRESHOLD = pref!(dom.document.dblclick_dist) as u64;
+        if let Some((last_time, last_pos, last_count, last_button)) = opt {
+            if button as i16 == last_button {
+                count = last_count;
+                if *event_type == MouseEventType::MouseDown {
+                    let DBL_CLICK_TIMEOUT =
+                        Duration::from_millis(pref!(dom.document.dblclick_timeout) as u64);
+                    let DBL_CLICK_DIST_THRESHOLD = pref!(dom.document.dblclick_dist) as u64;
 
-            // Calculate distance between this click and the previous click.
-            let line = click_pos - last_pos;
-            let dist = (line.dot(line) as f64).sqrt();
+                    // Calculate distance between this click and the previous click.
+                    let line = click_pos - last_pos;
+                    let dist = (line.dot(line) as f64).sqrt();
 
-            if now.duration_since(last_time) < DBL_CLICK_TIMEOUT &&
-                dist < DBL_CLICK_DIST_THRESHOLD as f64
-            {
-                // A double click has occurred if this click is within a certain time and dist. of previous click.
-                let click_count = 2;
-                let client_x = click_pos.x as i32;
-                let client_y = click_pos.y as i32;
-
-                let event = MouseEvent::new(
-                    &self.window,
-                    DOMString::from("dblclick"),
-                    EventBubbles::Bubbles,
-                    EventCancelable::Cancelable,
-                    Some(&self.window),
-                    click_count,
-                    client_x,
-                    client_y,
-                    client_x,
-                    client_y,
-                    false,
-                    false,
-                    false,
-                    false,
-                    0i16,
-                    None,
-                    None,
-                );
-                event.upcast::<Event>().fire(target.upcast());
-
-                // When a double click occurs, self.last_click_info is left as None so that a
-                // third sequential click will not cause another double click.
-                return;
+                    if now.duration_since(last_time) < DBL_CLICK_TIMEOUT &&
+                        dist < DBL_CLICK_DIST_THRESHOLD as f64
+                    {
+                        count = last_count + 1;
+                    } else {
+                        count = 1;
+                    }
+                }
             }
         }
+        // Update last_click_info with the time, position, & count of the click.
+        *self.last_click_info.borrow_mut() = Some(
+            (now, click_pos, count, button as i16)
+        );
 
-        // Update last_click_info with the time and position of the click.
-        *self.last_click_info.borrow_mut() = Some((now, click_pos));
+        count
+    }
+
+    fn fire_dblclick(&self, click_pos: Point2D<f32>, target: &Node, count: i32) {
+        // https://w3c.github.io/uievents/#event-type-dblclick
+        let client_x = click_pos.x as i32;
+        let client_y = click_pos.y as i32;
+
+        let event = MouseEvent::new(
+            &self.window,
+            DOMString::from("dblclick"),
+            EventBubbles::Bubbles,
+            EventCancelable::Cancelable,
+            Some(&self.window),
+            count,
+            client_x,
+            client_y,
+            client_x,
+            client_y,
+            false,
+            false,
+            false,
+            false,
+            0i16,
+            None,
+            None,
+        );
+        event.upcast::<Event>().fire(target.upcast());
     }
 
     pub fn fire_mouse_event(

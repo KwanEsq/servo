@@ -441,7 +441,7 @@ pub enum TouchEventType {
 pub struct TouchId(pub i32);
 
 /// The mouse button involved in the event.
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub enum MouseButton {
     /// The left mouse button.
     Left,
@@ -452,7 +452,7 @@ pub enum MouseButton {
 }
 
 /// The types of mouse events
-#[derive(Debug, Deserialize, MallocSizeOf, Serialize)]
+#[derive(Debug, Deserialize, MallocSizeOf, PartialEq, Serialize)]
 pub enum MouseEventType {
     /// Mouse button clicked
     Click,
