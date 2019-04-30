@@ -449,6 +449,10 @@ pub enum MouseButton {
     Middle,
     /// The right mouse button.
     Right,
+    /// The X1 (back) button
+    X1,
+    /// The X2 (forward) button
+    X2,
 }
 
 /// The types of mouse events

@@ -230,6 +230,8 @@ impl Window {
         let sbutton = match button {
             glutin::MouseButton::Middle => MouseButton::Middle,
             glutin::MouseButton::Right => MouseButton::Right,
+            glutin::MouseButton::Other(0) => MouseButton::X1,
+            glutin::MouseButton::Other(1) => MouseButton::X2,
             _ => MouseButton::Left,
         };
 
@@ -388,11 +390,7 @@ impl WindowPortsMethods for Window {
             glutin::WindowEvent::ReceivedCharacter(ch) => self.handle_received_character(ch),
             glutin::WindowEvent::KeyboardInput { input, .. } => self.handle_keyboard_input(input),
             glutin::WindowEvent::MouseInput { state, button, .. } => {
-                if button == MouseButton::Left || button == MouseButton::Middle
-                    || button == MouseButton::Right
-                {
-                    self.handle_mouse(button, state, self.mouse_pos.get());
-                }
+                self.handle_mouse(button, state, self.mouse_pos.get());
             },
             glutin::WindowEvent::CursorMoved { position, .. } => {
                 let pos = position.to_physical(self.device_hidpi_factor().get() as f64);
